@@ -77,9 +77,9 @@ public class RegistrationActivity extends AppCompatActivity {
                     new Response.Listener<String>() {
                         @Override
                         public void onResponse(String response) {
-                            Toast.makeText(getApplicationContext(), response, Toast.LENGTH_SHORT).show();
+                            Toast.makeText(getApplicationContext(), "Success", Toast.LENGTH_SHORT).show();
 
-
+                            finish();
                         }
                     },
                     new Response.ErrorListener() {
@@ -103,5 +103,9 @@ public class RegistrationActivity extends AppCompatActivity {
             requestQueue.add(strRequest);
 
         }
+    }
+
+    public void backClick(View view) {
+        finish();
     }
 }
