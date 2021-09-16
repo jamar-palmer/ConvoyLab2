@@ -2,6 +2,7 @@ package edu.temple.convoy;
 
 import androidx.appcompat.app.AppCompatActivity;
 
+import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.EditText;
@@ -78,6 +79,12 @@ public class RegistrationActivity extends AppCompatActivity {
                         @Override
                         public void onResponse(String response) {
                             Toast.makeText(getApplicationContext(), "Success", Toast.LENGTH_SHORT).show();
+
+                            SharedPreferences sharedPref = getApplicationContext().getSharedPreferences("user",MODE_PRIVATE);
+                            SharedPreferences.Editor editor = sharedPref.edit();
+                            editor.putString("username",username.getText().toString());
+                            editor.putString("name",first.getText().toString());
+                            editor.apply();
 
                             finish();
                         }

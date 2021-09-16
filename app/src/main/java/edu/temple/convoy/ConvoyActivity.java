@@ -8,6 +8,8 @@ import androidx.fragment.app.FragmentActivity;
 
 import android.Manifest;
 import android.annotation.SuppressLint;
+import android.content.Intent;
+import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.location.Criteria;
 import android.location.Location;
@@ -15,8 +17,16 @@ import android.location.LocationListener;
 import android.location.LocationManager;
 import android.os.Build;
 import android.os.Bundle;
+import android.view.View;
 import android.widget.TextView;
+import android.widget.Toast;
 
+import com.android.volley.Request;
+import com.android.volley.RequestQueue;
+import com.android.volley.Response;
+import com.android.volley.VolleyError;
+import com.android.volley.toolbox.StringRequest;
+import com.android.volley.toolbox.Volley;
 import com.google.android.gms.maps.CameraUpdate;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
@@ -25,6 +35,9 @@ import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.MarkerOptions;
 
+import java.util.HashMap;
+import java.util.Map;
+
 public class ConvoyActivity extends FragmentActivity implements OnMapReadyCallback {
 
     LocationManager locationManager;
@@ -32,6 +45,7 @@ public class ConvoyActivity extends FragmentActivity implements OnMapReadyCallba
     Location prevLocation;
     float distance;
     TextView textView;
+    RequestQueue requestQueue;
 
     GoogleMap mapAPI;
     SupportMapFragment mapFragment;
@@ -43,8 +57,9 @@ public class ConvoyActivity extends FragmentActivity implements OnMapReadyCallba
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_convoy);
+        requestQueue = Volley.newRequestQueue(this);
 
-        //textView = findViewById(R.id.distanceText);
+        textView = findViewById(R.id.txtId);
         mapFragment = (SupportMapFragment) getSupportFragmentManager().findFragmentById(R.id.mapAPI);
 
         mapFragment.getMapAsync(this);
@@ -55,7 +70,6 @@ public class ConvoyActivity extends FragmentActivity implements OnMapReadyCallba
             public void onLocationChanged(Location location) {
                 if (prevLocation != null) {
                     distance += location.distanceTo(prevLocation);
-                    textView.setText(String.valueOf(distance));
 
                 }
                 prevLocation = location;
@@ -147,5 +161,65 @@ public class ConvoyActivity extends FragmentActivity implements OnMapReadyCallba
         //LatLng mm = new LatLng(19.389137, 76.031094);
        // mapAPI.moveCamera(CameraUpdateFactory.newLatLng(mm));
        // mapAPI.moveCamera(CameraUpdateFactory.newLatLngZoom(mm, 16));
+    }
+
+    public void startConvoy(View view) {
+
+        Intent launchIntent = new Intent(ConvoyActivity.this, StartConvoyActivity.class);
+        startActivity(launchIntent);
+    }
+
+    public void endConvoy(View view) {
+        String convoy = "https://kamorris.com/lab/convoy/convoy.php";
+        StringRequest strRequest = new StringRequest(Request.Method.POST, convoy,
+                new Response.Listener<String>()
+                {
+                    @Override
+                    public void onResponse(String response)
+                    {
+                        if(response.contains("SUCCESS")){
+
+                            String[] split = response.split(":");
+                            String[] again = split[2].split("\"");
+                            String conID= again[1];
+
+                            // SharedPreferences.Editor editor = settings.edit();
+                            // editor.putString("convoyID",conID);
+                            textView.setText(conID);
+                            //finish();
+
+                        }else{
+                            Toast.makeText(ConvoyActivity.this, "Incorrect Login Information", Toast.LENGTH_SHORT).show();
+                        }
+                    }
+                },
+                new Response.ErrorListener()
+                {
+                    @Override
+                    public void onErrorResponse(VolleyError error)
+                    {
+                        Toast.makeText(ConvoyActivity.this, error.toString(), Toast.LENGTH_SHORT).show();
+                    }
+                })
+        {
+            @Override
+            protected Map<String, String> getParams()
+            {
+
+                SharedPreferences settings = getApplicationContext().getSharedPreferences("user", MODE_PRIVATE);
+               String username = settings.getString("username", "N/A");
+                String session = settings.getString("session", "N/A");
+                String convoyIdentity = settings.getString("convoyId", "N/A");
+
+                Map<String, String> params = new HashMap<String, String>();
+                params.put("action", "END");
+                params.put("username", username);
+                params.put("session_key",session);
+                params.put("convoy_id",convoyIdentity);
+                return params;
+            }
+        };
+
+        requestQueue.add(strRequest);
     }
 }

@@ -3,6 +3,7 @@ package edu.temple.convoy;
 import androidx.appcompat.app.AppCompatActivity;
 
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.EditText;
@@ -45,11 +46,6 @@ public class MainActivity extends AppCompatActivity {
         textView = findViewById(R.id.textView4);
 
         requestQueue = Volley.newRequestQueue(this);
-
-
-        //DELETE
-        Intent launchIntent = new Intent(MainActivity.this, ConvoyActivity.class);
-        startActivity(launchIntent);
     }
 
     public void makeAccount(View view) {
@@ -74,6 +70,12 @@ public class MainActivity extends AppCompatActivity {
                             String[] split = response.split(":");
                             String[] again = split[2].split("\"");
                             String session= again[1];
+
+                            SharedPreferences sharedPref = getApplicationContext().getSharedPreferences("user",MODE_PRIVATE);
+                            SharedPreferences.Editor editor = sharedPref.edit();
+                            editor.putString("session",session);
+                            editor.putString("username",username.getText().toString());
+                            editor.apply();
 
 
                             Intent launchIntent = new Intent(MainActivity.this, ConvoyActivity.class);
