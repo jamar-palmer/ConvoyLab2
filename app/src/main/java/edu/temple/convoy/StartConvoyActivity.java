@@ -4,6 +4,7 @@ import androidx.appcompat.app.AppCompatActivity;
 
 import android.content.SharedPreferences;
 import android.os.Bundle;
+import android.view.View;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -51,13 +52,12 @@ public class StartConvoyActivity extends AppCompatActivity {
                             String[] again = split[2].split("\"");
                             String conID= again[1];
 
-                          // SharedPreferences.Editor editor = settings.edit();
-                           // editor.putString("convoyID",conID);
+                           SharedPreferences.Editor editor = settings.edit();
+                           editor.putString("convoyID",conID);
                             txtConvoy.setText(conID);
-                            //finish();
 
                         }else{
-                            Toast.makeText(StartConvoyActivity.this, "Incorrect Login Information", Toast.LENGTH_SHORT).show();
+                            Toast.makeText(StartConvoyActivity.this, "Issue retrieving Convoy ID", Toast.LENGTH_SHORT).show();
                         }
                     }
                 },
@@ -82,5 +82,9 @@ public class StartConvoyActivity extends AppCompatActivity {
         };
 
         requestQueue.add(strRequest);
+    }
+
+    public void backClick(View view) {
+        finish();
     }
 }

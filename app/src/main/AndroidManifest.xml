@@ -13,7 +13,8 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/Theme.ConvoyApp">
-        <activity android:name=".StartConvoyActivity"></activity>
+        <activity android:name=".JoinConvoyActivity"></activity>
+        <activity android:name=".StartConvoyActivity" />
 
         <meta-data
             android:name="com.google.android.geo.API_KEY"

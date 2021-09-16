@@ -59,6 +59,12 @@ public class ConvoyActivity extends FragmentActivity implements OnMapReadyCallba
         setContentView(R.layout.activity_convoy);
         requestQueue = Volley.newRequestQueue(this);
 
+        SharedPreferences settings = getApplicationContext().getSharedPreferences("user", MODE_PRIVATE);
+        String check = settings.getString("convoyID", "N/A");
+        if(!check.equals("N/A")) {
+            textView.setText(check);
+        }
+
         textView = findViewById(R.id.txtId);
         mapFragment = (SupportMapFragment) getSupportFragmentManager().findFragmentById(R.id.mapAPI);
 
@@ -222,4 +228,71 @@ public class ConvoyActivity extends FragmentActivity implements OnMapReadyCallba
 
         requestQueue.add(strRequest);
     }
+
+    public void logoutClick(View view) {
+
+        String convoy = "https://kamorris.com/lab/convoy/account.php";
+        StringRequest strRequest = new StringRequest(Request.Method.POST, convoy,
+                new Response.Listener<String>()
+                {
+                    @Override
+                    public void onResponse(String response)
+                    {
+                        if(response.contains("SUCCESS")){
+
+                            SharedPreferences settings = getApplicationContext().getSharedPreferences("user", MODE_PRIVATE);
+                            SharedPreferences.Editor editor = settings.edit();
+                            editor.clear();
+                            finish();
+
+                        }else{
+                            Toast.makeText(ConvoyActivity.this, "Logout Failed", Toast.LENGTH_SHORT).show();
+                        }
+                    }
+                },
+                new Response.ErrorListener()
+                {
+                    @Override
+                    public void onErrorResponse(VolleyError error)
+                    {
+                        Toast.makeText(ConvoyActivity.this, error.toString(), Toast.LENGTH_SHORT).show();
+                    }
+                })
+        {
+            @Override
+            protected Map<String, String> getParams()
+            {
+
+                SharedPreferences settings = getApplicationContext().getSharedPreferences("user", MODE_PRIVATE);
+                String username = settings.getString("username", "N/A");
+                String session = settings.getString("session", "N/A");
+
+                Map<String, String> params = new HashMap<String, String>();
+                params.put("action", "LOGOUT");
+                params.put("username", username);
+                params.put("session_key",session);
+                return params;
+            }
+        };
+
+        requestQueue.add(strRequest);
+    }
+
+    public void joinClick(View view) {
+
+        Intent launchIntent = new Intent(ConvoyActivity.this, JoinConvoyActivity.class);
+        startActivity(launchIntent);
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        SharedPreferences settings = getApplicationContext().getSharedPreferences("user", MODE_PRIVATE);
+        String check = settings.getString("convoyID", "N/A");
+        if(!check.equals("N/A")){
+            textView.setText(check);
+        }
+    }
+
+
 }
