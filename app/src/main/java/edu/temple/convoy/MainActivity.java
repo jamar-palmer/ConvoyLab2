@@ -45,6 +45,11 @@ public class MainActivity extends AppCompatActivity {
         textView = findViewById(R.id.textView4);
 
         requestQueue = Volley.newRequestQueue(this);
+
+
+        //DELETE
+        Intent launchIntent = new Intent(MainActivity.this, ConvoyActivity.class);
+        startActivity(launchIntent);
     }
 
     public void makeAccount(View view) {
