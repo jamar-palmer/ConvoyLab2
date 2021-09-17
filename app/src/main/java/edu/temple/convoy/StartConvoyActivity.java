@@ -36,6 +36,11 @@ public class StartConvoyActivity extends AppCompatActivity {
         SharedPreferences settings = getApplicationContext().getSharedPreferences("user", MODE_PRIVATE);
          username = settings.getString("username", "N/A");
          session = settings.getString("session", "N/A");
+        String convoyCheck = settings.getString("convoyID", null);
+
+        if(convoyCheck!=null){
+            txtConvoy.setText("Convoy ID: "+ convoyCheck);
+        }
 
         requestQueue = Volley.newRequestQueue(this);
 
@@ -54,7 +59,11 @@ public class StartConvoyActivity extends AppCompatActivity {
 
                            SharedPreferences.Editor editor = settings.edit();
                            editor.putString("convoyID",conID);
-                            txtConvoy.setText(conID);
+                           editor.apply();
+                           txtConvoy.setText("Convoy ID: "+ conID);
+
+
+                            //start service and pass convoyID
 
                         }else{
                             Toast.makeText(StartConvoyActivity.this, "Issue retrieving Convoy ID", Toast.LENGTH_SHORT).show();

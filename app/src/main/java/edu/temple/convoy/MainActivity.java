@@ -45,6 +45,14 @@ public class MainActivity extends AppCompatActivity {
         username = findViewById(R.id.editUsername);
         textView = findViewById(R.id.textView4);
 
+        SharedPreferences settings = getApplicationContext().getSharedPreferences("user", MODE_PRIVATE);
+        String username = settings.getString("username", null);
+        if(username!=null){
+            Intent launchIntent = new Intent(MainActivity.this, ConvoyActivity.class);
+            startActivity(launchIntent);
+            finito();
+        }
+
         requestQueue = Volley.newRequestQueue(this);
     }
 
@@ -80,6 +88,9 @@ public class MainActivity extends AppCompatActivity {
 
                             Intent launchIntent = new Intent(MainActivity.this, ConvoyActivity.class);
                             startActivity(launchIntent);
+
+                            finito();
+
                         }else{
                             Toast.makeText(getApplicationContext(), "Incorrect Login Information", Toast.LENGTH_SHORT).show();
                         }
@@ -106,5 +117,9 @@ public class MainActivity extends AppCompatActivity {
         };
 
         requestQueue.add(strRequest);
+    }
+
+    public void finito(){
+        finish();
     }
 }

@@ -58,14 +58,16 @@ public class ConvoyActivity extends FragmentActivity implements OnMapReadyCallba
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_convoy);
         requestQueue = Volley.newRequestQueue(this);
+        textView = findViewById(R.id.txtId);
 
         SharedPreferences settings = getApplicationContext().getSharedPreferences("user", MODE_PRIVATE);
-        String check = settings.getString("convoyID", "N/A");
-        if(!check.equals("N/A")) {
-            textView.setText(check);
+        String check = settings.getString("convoyID", null);
+        if(check!=null) {
+            textView.setText("Convoy ID:" + check);
+
         }
 
-        textView = findViewById(R.id.txtId);
+
         mapFragment = (SupportMapFragment) getSupportFragmentManager().findFragmentById(R.id.mapAPI);
 
         mapFragment.getMapAsync(this);
@@ -170,12 +172,20 @@ public class ConvoyActivity extends FragmentActivity implements OnMapReadyCallba
     }
 
     public void startConvoy(View view) {
-
-        Intent launchIntent = new Intent(ConvoyActivity.this, StartConvoyActivity.class);
-        startActivity(launchIntent);
+        if(!textView.getText().toString().contains("Convoy")) {
+            Intent launchIntent = new Intent(ConvoyActivity.this, StartConvoyActivity.class);
+            startActivity(launchIntent);
+        }
     }
 
     public void endConvoy(View view) {
+        if(textView.getText().toString().contains("Convoy")) {
+            Intent launchIntent = new Intent(ConvoyActivity.this, EndConvoyActivity.class);
+            startActivity(launchIntent);
+        }
+    }
+
+    public void leaveConvoy(){
         String convoy = "https://kamorris.com/lab/convoy/convoy.php";
         StringRequest strRequest = new StringRequest(Request.Method.POST, convoy,
                 new Response.Listener<String>()
@@ -185,17 +195,15 @@ public class ConvoyActivity extends FragmentActivity implements OnMapReadyCallba
                     {
                         if(response.contains("SUCCESS")){
 
-                            String[] split = response.split(":");
-                            String[] again = split[2].split("\"");
-                            String conID= again[1];
-
-                            // SharedPreferences.Editor editor = settings.edit();
-                            // editor.putString("convoyID",conID);
-                            textView.setText(conID);
-                            //finish();
+                            SharedPreferences settings = getApplicationContext().getSharedPreferences("user", MODE_PRIVATE);
+                            SharedPreferences.Editor editor = settings.edit();
+                            editor.putString("convoyID",null);
+                            editor.apply();
+                            textView.setText(" ");
+                            Toast.makeText(ConvoyActivity.this, "You Hava Left This Convoy", Toast.LENGTH_SHORT).show();
 
                         }else{
-                            Toast.makeText(ConvoyActivity.this, "Incorrect Login Information", Toast.LENGTH_SHORT).show();
+                            Toast.makeText(ConvoyActivity.this, "You Have Not Joined A Convoy", Toast.LENGTH_SHORT).show();
                         }
                     }
                 },
@@ -213,9 +221,9 @@ public class ConvoyActivity extends FragmentActivity implements OnMapReadyCallba
             {
 
                 SharedPreferences settings = getApplicationContext().getSharedPreferences("user", MODE_PRIVATE);
-               String username = settings.getString("username", "N/A");
+                String username = settings.getString("username", "N/A");
                 String session = settings.getString("session", "N/A");
-                String convoyIdentity = settings.getString("convoyId", "N/A");
+                String convoyIdentity = settings.getString("convoyID", "N/A");
 
                 Map<String, String> params = new HashMap<String, String>();
                 params.put("action", "END");
@@ -231,6 +239,7 @@ public class ConvoyActivity extends FragmentActivity implements OnMapReadyCallba
 
     public void logoutClick(View view) {
 
+        leaveConvoy();
         String convoy = "https://kamorris.com/lab/convoy/account.php";
         StringRequest strRequest = new StringRequest(Request.Method.POST, convoy,
                 new Response.Listener<String>()
@@ -240,10 +249,15 @@ public class ConvoyActivity extends FragmentActivity implements OnMapReadyCallba
                     {
                         if(response.contains("SUCCESS")){
 
+
                             SharedPreferences settings = getApplicationContext().getSharedPreferences("user", MODE_PRIVATE);
                             SharedPreferences.Editor editor = settings.edit();
                             editor.clear();
-                            finish();
+                            editor.apply();
+
+                            Intent launchIntent = new Intent(ConvoyActivity.this, MainActivity.class);
+                            startActivity(launchIntent);
+                            finito();
 
                         }else{
                             Toast.makeText(ConvoyActivity.this, "Logout Failed", Toast.LENGTH_SHORT).show();
@@ -290,9 +304,21 @@ public class ConvoyActivity extends FragmentActivity implements OnMapReadyCallba
         SharedPreferences settings = getApplicationContext().getSharedPreferences("user", MODE_PRIVATE);
         String check = settings.getString("convoyID", "N/A");
         if(!check.equals("N/A")){
-            textView.setText(check);
+            textView.setText("Convoy ID:" + check);
+        }
+
+        String leave = settings.getString("end", null);
+
+        if(leave!=null){
+            SharedPreferences.Editor editor = settings.edit();
+            editor.putString("end",null);
+            editor.apply();
+           leaveConvoy();
         }
     }
 
 
+    public void finito(){
+        finish();
+    }
 }
