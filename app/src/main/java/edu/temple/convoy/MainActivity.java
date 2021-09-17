@@ -1,7 +1,12 @@
 package edu.temple.convoy;
 
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.app.NotificationCompat;
+import androidx.core.app.NotificationManagerCompat;
 
+import android.app.Notification;
+import android.app.NotificationChannel;
+import android.app.NotificationManager;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
@@ -27,12 +32,15 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 
+
 public class MainActivity extends AppCompatActivity {
 
     EditText pw;
     EditText username;
     RequestQueue requestQueue;
 
+     NotificationManagerCompat notiManage;
+    NotificationCompat.Builder notiBuild;
     TextView textView;
 
 
@@ -40,6 +48,23 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+
+        NotificationChannel channel1 = null;
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
+            channel1 = new NotificationChannel("channel1", "Channel 1", NotificationManager.IMPORTANCE_HIGH);
+            channel1.setDescription("This is Channel 1");
+
+            NotificationManager manager = getSystemService(NotificationManager.class);
+            manager.createNotificationChannel(channel1);
+        }
+
+       notiManage = NotificationManagerCompat.from(this);
+        Notification notification = new NotificationCompat.Builder(this, "channel1")
+                .setSmallIcon(R.drawable.ic_launcher_background).setContentTitle("Test").setContentText("Testing")
+                .setPriority(NotificationCompat.PRIORITY_HIGH).setCategory(NotificationCompat.CATEGORY_MESSAGE).build();
+
+        //notiManage.notify(1, notification);
+
 
         pw = findViewById(R.id.editPass);
         username = findViewById(R.id.editUsername);

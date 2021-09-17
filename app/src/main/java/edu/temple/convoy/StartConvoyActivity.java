@@ -2,6 +2,7 @@ package edu.temple.convoy;
 
 import androidx.appcompat.app.AppCompatActivity;
 
+import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.view.View;
@@ -63,7 +64,11 @@ public class StartConvoyActivity extends AppCompatActivity {
                            txtConvoy.setText("Convoy ID: "+ conID);
 
 
-                            //start service and pass convoyID
+                            //start service
+                            Intent serviceIntent = new Intent(StartConvoyActivity.this, ConvoyService.class);
+
+                            startService(serviceIntent);
+
 
                         }else{
                             Toast.makeText(StartConvoyActivity.this, "Issue retrieving Convoy ID", Toast.LENGTH_SHORT).show();
