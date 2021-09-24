@@ -19,6 +19,7 @@ import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.view.View;
+import android.widget.Button;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -42,6 +43,9 @@ import com.google.android.gms.maps.model.BitmapDescriptorFactory;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
+import com.google.android.gms.tasks.OnCompleteListener;
+import com.google.android.gms.tasks.Task;
+import com.google.firebase.messaging.FirebaseMessaging;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -58,6 +62,8 @@ public class ConvoyActivity extends FragmentActivity implements OnMapReadyCallba
 
     GoogleMap mapAPI;
     SupportMapFragment mapFragment;
+    Button button;
+    String startJoin;
 
     @RequiresApi(api = Build.VERSION_CODES.M)
     @Override
@@ -67,12 +73,23 @@ public class ConvoyActivity extends FragmentActivity implements OnMapReadyCallba
 
         requestQueue = Volley.newRequestQueue(this);
         textView = findViewById(R.id.txtId);
+        button = findViewById(R.id.button4);
         fusedLocationClient = LocationServices.getFusedLocationProviderClient(this);
 
         SharedPreferences settings = getApplicationContext().getSharedPreferences("user", MODE_PRIVATE);
         String check = settings.getString("convoyID", null);
+
         if (check != null) {
             textView.setText("Convoy ID:" + check);
+
+            String check2 = settings.getString("start", null);
+            String username = settings.getString("username", "N/A");
+            if(check2!= null && username.equals(check2)){
+                startJoin = "start";
+                button.setText("END CONVOY");
+            }else{
+                startJoin = "join";
+            }
 
         }
         mapFragment = (SupportMapFragment) getSupportFragmentManager().findFragmentById(R.id.mapAPI);
@@ -97,6 +114,7 @@ public class ConvoyActivity extends FragmentActivity implements OnMapReadyCallba
                         double lat = lastKnown.getLatitude();
                         double longi = lastKnown.getLongitude();
                         LatLng latLng = new LatLng(lat,longi);
+                        updateConvoy(lat, longi);
                         mapAPI.animateCamera(CameraUpdateFactory.newLatLngZoom(latLng, 14.f));
 
 
@@ -209,6 +227,7 @@ public class ConvoyActivity extends FragmentActivity implements OnMapReadyCallba
         if(textView.getText().toString().contains("Convoy")) {
             Intent launchIntent = new Intent(ConvoyActivity.this, EndConvoyActivity.class);
             startActivity(launchIntent);
+
         }
     }
 
@@ -224,10 +243,15 @@ public class ConvoyActivity extends FragmentActivity implements OnMapReadyCallba
 
                             SharedPreferences settings = getApplicationContext().getSharedPreferences("user", MODE_PRIVATE);
                             SharedPreferences.Editor editor = settings.edit();
+                            String convoyIdentity = settings.getString("convoyID", "N/A");
+                            endTopic(convoyIdentity);
+
                             editor.putString("convoyID",null);
+                            editor.putString("start",null);
                             editor.apply();
                             textView.setText(" ");
-                            Toast.makeText(ConvoyActivity.this, "You Hava Left This Convoy", Toast.LENGTH_SHORT).show();
+                            startJoin = " ";
+                            Toast.makeText(ConvoyActivity.this, "You Hava Ended This Convoy", Toast.LENGTH_SHORT).show();
 
                         }else{
                             Toast.makeText(ConvoyActivity.this, "You Have Not Joined A Convoy", Toast.LENGTH_SHORT).show();
@@ -262,6 +286,78 @@ public class ConvoyActivity extends FragmentActivity implements OnMapReadyCallba
         };
 
         requestQueue.add(strRequest);
+    }
+
+    public void endingConvoy(){
+        String convoy = "https://kamorris.com/lab/convoy/convoy.php";
+        StringRequest strRequest = new StringRequest(Request.Method.POST, convoy,
+                new Response.Listener<String>()
+                {
+                    @Override
+                    public void onResponse(String response)
+                    {
+                        if(response.contains("SUCCESS")){
+
+                            SharedPreferences settings = getApplicationContext().getSharedPreferences("user", MODE_PRIVATE);
+                            SharedPreferences.Editor editor = settings.edit();
+                            String convoyIdentity = settings.getString("convoyID", "N/A");
+                            endTopic(convoyIdentity);
+
+                            editor.putString("convoyID",null);
+                            editor.putString("start",null);
+                            editor.apply();
+                            textView.setText(" ");
+                            startJoin = " ";
+                            Toast.makeText(ConvoyActivity.this, "You Hava Left This Convoy", Toast.LENGTH_SHORT).show();
+
+                        }else{
+                            Toast.makeText(ConvoyActivity.this, "You Have Not Joined A Convoy", Toast.LENGTH_SHORT).show();
+                        }
+                    }
+                },
+                new Response.ErrorListener()
+                {
+                    @Override
+                    public void onErrorResponse(VolleyError error)
+                    {
+                        Toast.makeText(ConvoyActivity.this, error.toString(), Toast.LENGTH_SHORT).show();
+                    }
+                })
+        {
+            @Override
+            protected Map<String, String> getParams()
+            {
+
+                SharedPreferences settings = getApplicationContext().getSharedPreferences("user", MODE_PRIVATE);
+                String username = settings.getString("username", "N/A");
+                String session = settings.getString("session", "N/A");
+                String convoyIdentity = settings.getString("convoyID", "N/A");
+
+                Map<String, String> params = new HashMap<String, String>();
+                params.put("action", "LEAVE");
+                params.put("username", username);
+                params.put("session_key",session);
+                params.put("convoy_id",convoyIdentity);
+                return params;
+            }
+        };
+
+        requestQueue.add(strRequest);
+    }
+
+    public void endTopic(String convoyTopic){
+
+        FirebaseMessaging.getInstance().unsubscribeFromTopic(convoyTopic).addOnCompleteListener(new OnCompleteListener<Void>() {
+            @Override
+            public void onComplete(@NonNull Task<Void> task) {
+                Toast.makeText(ConvoyActivity.this, "Topic Successfully UnSubscribed", Toast.LENGTH_SHORT).show();
+                if (!task.isSuccessful()) {
+                    Toast.makeText(ConvoyActivity.this, "Topic UnSubscription Unsuccessful", Toast.LENGTH_SHORT).show();
+                }
+
+            }
+
+        });
     }
 
     public void logoutClick(View view) {
@@ -325,6 +421,56 @@ public class ConvoyActivity extends FragmentActivity implements OnMapReadyCallba
         startActivity(launchIntent);
     }
 
+    public void updateConvoy(Double lat, Double longi){
+        String convoy = "https://kamorris.com/lab/convoy/account.php";
+        StringRequest strRequest = new StringRequest(Request.Method.POST, convoy,
+                new Response.Listener<String>()
+                {
+                    @Override
+                    public void onResponse(String response)
+                    {
+                        if(response.contains("SUCCESS")){
+                          //  Toast.makeText(ConvoyActivity.this, "Updated ", Toast.LENGTH_SHORT).show();
+
+
+
+                        }else{
+                           // Toast.makeText(ConvoyActivity.this, "Updated failed", Toast.LENGTH_SHORT).show();
+                        }
+                    }
+                },
+                new Response.ErrorListener()
+                {
+                    @Override
+                    public void onErrorResponse(VolleyError error)
+                    {
+                        Toast.makeText(ConvoyActivity.this, error.toString(), Toast.LENGTH_SHORT).show();
+                    }
+                })
+        {
+            @Override
+            protected Map<String, String> getParams()
+            {
+
+
+                SharedPreferences settings = getApplicationContext().getSharedPreferences("user", MODE_PRIVATE);
+                String username = settings.getString("username", "N/A");
+                String session = settings.getString("session", "N/A");
+                String convoyIdentity = settings.getString("convoyID", "N/A");
+
+                Map<String, String> params = new HashMap<String, String>();
+                params.put("action", "UPDATE");
+                params.put("username", username);
+                params.put("session_key",session);
+                params.put("firebase_token","dKp_M7kZxjM:APA91bEpAfAF-j-rA7urAKC_ppIMO0KVd5SVmuh8p0P1yatzEpbarHU1b9cWD3lUeqAPsP1D8BZF2qJ4rlRqnfM7JYCxlQehWEfvi9zj7L-OdoUQrknZaFXxApxM40e9WZRGfDZd-8zX");
+
+                return params;
+            }
+        };
+
+        requestQueue.add(strRequest);
+    }
+
     @Override
     protected void onResume() {
         super.onResume();
@@ -332,6 +478,16 @@ public class ConvoyActivity extends FragmentActivity implements OnMapReadyCallba
         String check = settings.getString("convoyID", "N/A");
         if(!check.equals("N/A")){
             textView.setText("Convoy ID:" + check);
+
+            String check2 = settings.getString("start", null);
+            String username = settings.getString("username", "N/A");
+            if(check2!= null && username.equals(check2)){
+                startJoin = "start";
+                button.setText("END CONVOY");
+            }else{
+                startJoin = "join";
+                button.setText("LEAVE CONVOY");
+            }
         }
 
         String leave = settings.getString("end", null);
@@ -340,7 +496,11 @@ public class ConvoyActivity extends FragmentActivity implements OnMapReadyCallba
             SharedPreferences.Editor editor = settings.edit();
             editor.putString("end",null);
             editor.apply();
-           leaveConvoy();
+            if(startJoin.equals("start")){
+                leaveConvoy();
+            }else{
+                endingConvoy();
+            }
         }
     }
 
