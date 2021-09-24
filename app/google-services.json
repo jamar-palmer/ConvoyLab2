@@ -1,0 +1,39 @@
+{
+  "project_info": {
+    "project_number": "300023337568",
+    "project_id": "convoyapp-ed387",
+    "storage_bucket": "convoyapp-ed387.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:300023337568:android:e806a17665b6a53a0e2905",
+        "android_client_info": {
+          "package_name": "edu.temple.convoy"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "300023337568-tapn3732e7qorn8vjv71iuk8h2u3goo3.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyD5F-OllGnoH_NoWxt9HrkdE6RM1nXcWC4"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "300023337568-tapn3732e7qorn8vjv71iuk8h2u3goo3.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
