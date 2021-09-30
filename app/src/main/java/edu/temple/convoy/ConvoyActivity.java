@@ -21,6 +21,7 @@ import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
+import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.TextView;
@@ -54,6 +55,7 @@ import com.google.firebase.FirebaseOptions;
 import com.google.firebase.messaging.FirebaseMessaging;
 import com.google.firebase.messaging.RemoteMessage;
 
+import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -97,14 +99,15 @@ public class ConvoyActivity extends FragmentActivity implements OnMapReadyCallba
             e.printStackTrace();
         }
 
-        
-
         requestQueue = Volley.newRequestQueue(this);
         textView = findViewById(R.id.txtId);
         button = findViewById(R.id.button4);
         fusedLocationClient = LocationServices.getFusedLocationProviderClient(this);
 
-         mMessageReceiver= new BroadcastReceiver() {
+        
+
+
+        mMessageReceiver= new BroadcastReceiver() {
              @Override
              public void onReceive(Context context, Intent intent) {
                  Toast.makeText(ConvoyActivity.this, intent.getExtras().getString("location"), Toast.LENGTH_SHORT).show();
