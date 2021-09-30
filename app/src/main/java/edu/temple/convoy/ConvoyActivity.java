@@ -8,6 +8,8 @@ import androidx.fragment.app.FragmentActivity;
 
 import android.Manifest;
 import android.annotation.SuppressLint;
+import android.content.BroadcastReceiver;
+import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
@@ -18,6 +20,7 @@ import android.location.LocationManager;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
+import android.os.Message;
 import android.view.View;
 import android.widget.Button;
 import android.widget.TextView;
@@ -27,6 +30,7 @@ import com.android.volley.Request;
 import com.android.volley.RequestQueue;
 import com.android.volley.Response;
 import com.android.volley.VolleyError;
+import com.android.volley.toolbox.JsonObjectRequest;
 import com.android.volley.toolbox.StringRequest;
 import com.android.volley.toolbox.Volley;
 import com.google.android.gms.location.FusedLocationProviderClient;
@@ -45,8 +49,16 @@ import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
+import com.google.firebase.FirebaseApp;
+import com.google.firebase.FirebaseOptions;
 import com.google.firebase.messaging.FirebaseMessaging;
+import com.google.firebase.messaging.RemoteMessage;
 
+import org.json.JSONException;
+import org.json.JSONObject;
+
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -64,6 +76,7 @@ public class ConvoyActivity extends FragmentActivity implements OnMapReadyCallba
     SupportMapFragment mapFragment;
     Button button;
     String startJoin;
+    private BroadcastReceiver mMessageReceiver;
 
     @RequiresApi(api = Build.VERSION_CODES.M)
     @Override
@@ -71,10 +84,32 @@ public class ConvoyActivity extends FragmentActivity implements OnMapReadyCallba
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_convoy);
 
+        FileInputStream serviceAccount =
+                null;
+        try {
+            serviceAccount = new FileInputStream("C:\\Users\\Jamar\\AndroidStudioProjects\\ConvoyApp\\app\\src\\main\\res\\convoyapp-ed387-firebase-adminsdk-axzmh-9c196e3fe4.json");
+          //  FirebaseOptions options = new FirebaseOptions.Builder()
+          //          .setCredentials(GoogleCredentials.fromStream(serviceAccount))
+           //        .build();
+
+           // FirebaseApp.initializeApp(options);
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+        }
+
+        
+
         requestQueue = Volley.newRequestQueue(this);
         textView = findViewById(R.id.txtId);
         button = findViewById(R.id.button4);
         fusedLocationClient = LocationServices.getFusedLocationProviderClient(this);
+
+         mMessageReceiver= new BroadcastReceiver() {
+             @Override
+             public void onReceive(Context context, Intent intent) {
+                 Toast.makeText(ConvoyActivity.this, intent.getExtras().getString("location"), Toast.LENGTH_SHORT).show();
+             }
+        };
 
         SharedPreferences settings = getApplicationContext().getSharedPreferences("user", MODE_PRIVATE);
         String check = settings.getString("convoyID", null);
@@ -117,6 +152,12 @@ public class ConvoyActivity extends FragmentActivity implements OnMapReadyCallba
                         updateConvoy(lat, longi);
                         mapAPI.animateCamera(CameraUpdateFactory.newLatLngZoom(latLng, 14.f));
 
+
+                    
+                    RemoteMessage message = new RemoteMessage.Builder("dKp_M7kZxjM:APA91bEpAfAF-j-rA7urAKC_ppIMO0KVd5SVmuh8p0P1yatzEpbarHU1b9cWD3lUeqAPsP1D8BZF2qJ4rlRqnfM7JYCxlQehWEfvi9zj7L-OdoUQrknZaFXxApxM40e9WZRGfDZd-8zX")
+                            .addData("message", "Hello")
+                            .build();
+                    FirebaseMessaging.getInstance().send(message);
 
                 }
                 prevLocation = location;
@@ -422,7 +463,7 @@ public class ConvoyActivity extends FragmentActivity implements OnMapReadyCallba
     }
 
     public void updateConvoy(Double lat, Double longi){
-        String convoy = "https://kamorris.com/lab/convoy/account.php";
+        String convoy = "https://kamorris.com/lab/convoy/convoy.php";
         StringRequest strRequest = new StringRequest(Request.Method.POST, convoy,
                 new Response.Listener<String>()
                 {
@@ -430,12 +471,11 @@ public class ConvoyActivity extends FragmentActivity implements OnMapReadyCallba
                     public void onResponse(String response)
                     {
                         if(response.contains("SUCCESS")){
-                          //  Toast.makeText(ConvoyActivity.this, "Updated ", Toast.LENGTH_SHORT).show();
-
+                            //Toast.makeText(ConvoyActivity.this, "Updated ", Toast.LENGTH_SHORT).show();
 
 
                         }else{
-                           // Toast.makeText(ConvoyActivity.this, "Updated failed", Toast.LENGTH_SHORT).show();
+                           //Toast.makeText(ConvoyActivity.this, "Updated failed", Toast.LENGTH_SHORT).show();
                         }
                     }
                 },
@@ -462,11 +502,20 @@ public class ConvoyActivity extends FragmentActivity implements OnMapReadyCallba
                 params.put("action", "UPDATE");
                 params.put("username", username);
                 params.put("session_key",session);
-                params.put("firebase_token","dKp_M7kZxjM:APA91bEpAfAF-j-rA7urAKC_ppIMO0KVd5SVmuh8p0P1yatzEpbarHU1b9cWD3lUeqAPsP1D8BZF2qJ4rlRqnfM7JYCxlQehWEfvi9zj7L-OdoUQrknZaFXxApxM40e9WZRGfDZd-8zX");
+                params.put("convoy_id",convoyIdentity);
+                params.put("latitude",String.valueOf(lat));
+                params.put("longitude",String.valueOf(longi));
+
+
 
                 return params;
             }
         };
+
+        SharedPreferences settings = getApplicationContext().getSharedPreferences("user", MODE_PRIVATE);
+        String username = settings.getString("username", "N/A");
+        String session = settings.getString("session", "N/A");
+        String convoyIdentity = settings.getString("convoyID", "N/A");
 
         requestQueue.add(strRequest);
     }
